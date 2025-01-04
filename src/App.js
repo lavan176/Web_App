@@ -15,7 +15,7 @@ const App = () => {
     if (!imageSrc) return alert('Capture a photo first!');
     
     try {
-      const response = await axios.post('http://localhost:5000/upload', { image: imageSrc });
+      const response = await axios.post('https://be-ggny.onrender.com/upload', { image: imageSrc });
       alert('Photo uploaded successfully!');
       console.log(response.data);
     } catch (error) {
