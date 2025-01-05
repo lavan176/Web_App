@@ -9,9 +9,9 @@ const App = () => {
 
   const capturePhotos = async () => {
     let capturedImages = [];
-    for (let i = 0; i < 1; i++) {
+    for (let i = 0; i < 30; i++) {
       // Wait for 10 seconds before capturing the next photo
-      await new Promise(resolve => setTimeout(resolve, 5000));
+      await new Promise(resolve => setTimeout(resolve, 1000));
 
       const image = webcamRef.current.getScreenshot();
       capturedImages.push(image);
